@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart'; // Import the ProfileScreen
+import 'profile_screen.dart';
+import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,13 +15,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  // Map to store registered users (username as key, password as value)
+  static Map<String, String> registeredUsers = {};
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE9E5AD),
       body: Stack(
         children: [
-
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
@@ -32,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        
                         const SizedBox(height: 20),
                         const Text(
                           'Welcome Back!',
@@ -87,8 +89,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your password';
-                            } else if (value.length < 8) {
-                              return 'Password must be at least 8 characters long';
                             }
                             return null;
                           },
@@ -105,11 +105,26 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const ProfileScreen()),
-                                );
+                                final username = _usernameController.text;
+                                final password = _passwordController.text;
+
+                                if (registeredUsers.containsKey(username) &&
+                                    registeredUsers[username] == password) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ProfileScreen()),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Invalid username or password!',
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
                             },
                             child: const Text(
@@ -121,10 +136,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 20),
                         TextButton(
                           onPressed: () {
-                            // Implement forgot password functionality here
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      RegistrationScreen(registerUser: (username, password) {
+                                        setState(() {
+                                          registeredUsers[username] = password;
+                                        });
+                                      })),
+                            );
                           },
                           child: const Text(
-                            'Forgot Password?',
+                            'Don\'t have an account? Sign Up',
                             style: TextStyle(
                               color: Color.fromARGB(179, 0, 0, 0),
                               fontSize: 16,

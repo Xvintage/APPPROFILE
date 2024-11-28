@@ -79,6 +79,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+
 class ProfileItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -105,6 +106,150 @@ class ProfileItem extends StatelessWidget {
     );
   }
 }
+// Cipher screen implementation
+class CipherScreen extends StatefulWidget {
+  const CipherScreen({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _CipherScreenState createState() => _CipherScreenState();
+}
+class _CipherScreenState extends State<CipherScreen> {
+  final TextEditingController _inputController = TextEditingController();
+  final TextEditingController _keyController = TextEditingController();
+  String _output = "";
+  String _selectedCipher = "ATBASH";
+
+  // Cipher encryption/decryption logic
+  String atbashCipher(String input) {
+    return input
+        .toUpperCase()
+        .split('')
+        .map((char) {
+          if (char.codeUnitAt(0) >= 65 && char.codeUnitAt(0) <= 90) {
+            return String.fromCharCode(155 - char.codeUnitAt(0));
+          }
+          return char;
+        })
+        .join('');
+  }
+
+  String ceasarCipher(String input, int shift, {bool decrypt = false}) {
+    return input
+        .split('')
+        .map((char) {
+          if (char.codeUnitAt(0) >= 65 && char.codeUnitAt(0) <= 90) {
+            int newCharCode = ((char.codeUnitAt(0) - 65 + shift * (decrypt ? -1 : 1)) % 26 + 26) % 26 + 65;
+            return String.fromCharCode(newCharCode);
+          }
+          return char;
+        })
+        .join('');
+  }
+
+  String vigenereCipher(String input, String key, {bool decrypt = false}) {
+    key = key.toUpperCase();
+    int keyIndex = 0;
+    return input
+        .toUpperCase()
+        .split('')
+        .map((char) {
+          if (char.codeUnitAt(0) >= 65 && char.codeUnitAt(0) <= 90) {
+            int shift = key.codeUnitAt(keyIndex % key.length) - 65;
+            if (decrypt) shift = -shift;
+            keyIndex++;
+            return String.fromCharCode(((char.codeUnitAt(0) - 65 + shift) % 26 + 26) % 26 + 65);
+          }
+          return char;
+        })
+        .join('');
+  }
+
+  void _processInput({bool decrypt = false}) {
+    String input = _inputController.text.trim();
+    String key = _keyController.text.trim();
+    setState(() {
+      switch (_selectedCipher) {
+        case "ATBASH":
+          _output = atbashCipher(input);
+          break;
+        case "CEASAR":
+          _output = ceasarCipher(input, int.tryParse(key) ?? 0, decrypt: decrypt);
+          break;
+        case "VIGENERE":
+          _output = vigenereCipher(input, key, decrypt: decrypt);
+          break;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Cipher Encryption/Decryption"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButton<String>(
+              value: _selectedCipher,
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedCipher = newValue!;
+                });
+              },
+              items: const [
+                DropdownMenuItem(value: "ATBASH", child: Text("ATBASH Cipher")),
+                DropdownMenuItem(value: "CEASAR", child: Text("CEASAR Cipher")),
+                DropdownMenuItem(value: "VIGENERE", child: Text("VIGENERE Cipher")),
+              ],
+            ),
+            TextField(
+              controller: _inputController,
+              decoration: const InputDecoration(
+                labelText: "Input Text",
+              ),
+            ),
+            if (_selectedCipher != "ATBASH")
+              TextField(
+                controller: _keyController,
+                decoration: InputDecoration(
+                  labelText: _selectedCipher == "CEASAR"
+                      ? "Key (Shift Amount)"
+                      : "Key (Text)",
+                ),
+              ),
+            const SizedBox(height: 16),
+            // Encrypt Button
+            ElevatedButton(
+              onPressed: () => _processInput(decrypt: false),
+              child: const Text("Encrypt"),
+            ),
+            const SizedBox(height: 8),
+            // Decrypt Button
+            ElevatedButton(
+              onPressed: () => _processInput(decrypt: true),
+              child: const Text("Decrypt"),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Output:",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            Text(
+              _output,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -155,6 +300,17 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
+           ListTile(
+            leading: const Icon(Icons.lock, color: Colors.black),
+            title: const Text('Ciphers', style: TextStyle(color: Colors.black)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CipherScreen()),
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.info, color: Colors.black),
             title: const Text(
@@ -170,16 +326,7 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           const Spacer(),
-          ListTile(
-            leading: const Icon(Icons.contact_mail, color: Colors.black),
-            title: const Text(
-              'Contact',
-              style: TextStyle(color: Colors.black),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
+         
         ],
       ),
     );

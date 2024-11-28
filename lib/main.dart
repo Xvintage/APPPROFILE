@@ -9,6 +9,7 @@ void main() {
   runApp(const ProfileApp());
 }
 
+
 class ProfileApp extends StatelessWidget {
   const ProfileApp({super.key});
 
@@ -31,6 +32,22 @@ class ProfileApp extends StatelessWidget {
         ),
       ),
       home: const LoginScreen(),
+    );
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Authentication App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const LoginScreen(), // Set LoginScreen as the home screen
+      debugShowCheckedModeBanner: false, // Hide debug banner
     );
   }
 }
